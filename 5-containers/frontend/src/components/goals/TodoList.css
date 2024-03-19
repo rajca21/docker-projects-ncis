@@ -1,0 +1,14 @@
+#course-todos {
+  text-align: center; 
+  width: 100%;
+}
+
+#course-todos h2 {
+  color: #a14a4a; 
+}
+
+#course-todos ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}

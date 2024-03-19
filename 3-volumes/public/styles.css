@@ -1,0 +1,84 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: 'Arial', sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: #f0f8ff; /* Svijetlo plava pozadina */
+}
+
+header {
+  width: 100%;
+  height: 5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #4caf50; /* Zelena boja */
+}
+
+header h1 {
+  margin: 0;
+  color: white;
+}
+
+header a {
+  color: white;
+  text-decoration: none;
+}
+
+section {
+  margin: 2rem auto;
+  width: 100%;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background-color: #e0f2f1; /* Zelena boja */
+}
+
+.form-control {
+  margin: 0.5rem 0;
+}
+
+label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  display: block;
+  color: #4caf50; /* Zelena boja */
+}
+
+input, 
+textarea {
+  font: inherit;
+  display: block;
+  width: 100%; /* Postavljanje širine na 100% */
+  padding: 0.5rem;
+  border: 1px solid #4caf50; /* Zelena boja */
+  border-radius: 4px;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #00695c; /* Tamnija zelena boja */
+  outline: none;
+  background-color: #e0f2f1; /* Zelena boja */
+}
+
+button {
+  cursor: pointer;
+  font: inherit;
+  border: none;
+  background-color: #4caf50; /* Zelena boja */
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 30px;
+  transition: background-color 0.3s ease; /* Dodan efekat tranzicije */
+}
+
+button:hover,
+button:active {
+  background-color: #45a049; /* Tamnija zelena boja na hoveru i aktivaciji */
+}
