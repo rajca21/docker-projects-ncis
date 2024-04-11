@@ -9,31 +9,31 @@ const port = 3000;
 app.use(bodyParser.json());
 
 // MySQL connection setup
-const connection = mysql.createConnection({
-  host:  process.env.DB_HOST || '172.17.0.1', //ovde staviti svoju IP adresu
-  user: 'novi', 
-  password: 'novi',
-  database: 'swfavorites'
-});
+// const connection = mysql.createConnection({
+//   host:  process.env.DB_HOST || '172.17.0.1', //ovde staviti svoju IP adresu
+//   user: 'novi', 
+//   password: 'novi',
+//   database: 'swfavorites'
+// });
 
-connection.connect(err => {
-    if (err) throw err;
-    console.log('Connected to the database.');
+// connection.connect(err => {
+//     if (err) throw err;
+//     console.log('Connected to the database.');
   
-    const createTableSql = `
-      CREATE TABLE IF NOT EXISTS favorites (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        type VARCHAR(100) NOT NULL,
-        url VARCHAR(100) NOT NULL
-      )
-    `;
+//     const createTableSql = `
+//       CREATE TABLE IF NOT EXISTS favorites (
+//         id INT AUTO_INCREMENT PRIMARY KEY,
+//         name VARCHAR(100) NOT NULL,
+//         type VARCHAR(100) NOT NULL,
+//         url VARCHAR(100) NOT NULL
+//       )
+//     `;
   
-    connection.query(createTableSql, (err, result) => {
-      if (err) throw err;
-      console.log("Table 'favorites' is ready.");
-    });
-  });
+//     connection.query(createTableSql, (err, result) => {
+//       if (err) throw err;
+//       console.log("Table 'favorites' is ready.");
+//     });
+//   });
 
 
 // Endpoint to get all favorites
