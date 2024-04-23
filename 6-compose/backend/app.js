@@ -1,101 +1,91 @@
-const fs = require('fs');
-const path = require('path');
-
 const express = require('express');
-const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const morgan = require('morgan');
-
-const Goal = require('./models/goal');
+const mysql = require('mysql');
+const axios = require('axios');
+const cors = require('cors');
 
 const app = express();
-
-const accessLogStream = fs.createWriteStream(
-  path.join(__dirname, 'logs', 'access.log'),
-  { flags: 'a' }
-);
-
-app.use(morgan('combined', { stream: accessLogStream }));
-
+const port = 3000;
+app.use(cors());
 app.use(bodyParser.json());
 
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  next();
+// MySQL connection setup
+const connection = mysql.createConnection({
+  host: 'mysql-server', //ovde staviti naziv mysql servera u mrezi
+  user: 'novi', 
+  password: 'novi',
+  database: 'swfavorites'
 });
 
-app.get('/goals', async (req, res) => {
-  console.log('TRYING TO FETCH GOALS');
-  try {
-    const goals = await Goal.find();
-    res.status(200).json({
-      goals: goals.map((goal) => ({
-        id: goal.id,
-        text: goal.text,
-      })),
+connection.connect(err => {
+    if (err) throw err;
+    console.log('Connected to the database.');
+  
+    const createTableSql = `
+      CREATE TABLE IF NOT EXISTS favorites (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        type VARCHAR(100) NOT NULL,
+        url VARCHAR(100) NOT NULL
+      )
+    `;
+  
+    connection.query(createTableSql, (err, result) => {
+      if (err) throw err;
+      console.log("Table 'favorites' is ready.");
     });
-    console.log('FETCHED GOALS');
-  } catch (err) {
-    console.error('ERROR FETCHING GOALS');
-    console.error(err.message);
-    res.status(500).json({ message: 'Failed to load goals.' });
-  }
-});
-
-app.post('/goals', async (req, res) => {
-  console.log('TRYING TO STORE GOAL');
-  const goalText = req.body.text;
-
-  if (!goalText || goalText.trim().length === 0) {
-    console.log('INVALID INPUT - NO TEXT');
-    return res.status(422).json({ message: 'Invalid goal text.' });
-  }
-
-  const goal = new Goal({
-    text: goalText,
   });
 
+
+// Endpoint to get all favorites
+app.get('/favorites', (req, res) => {
+  connection.query('SELECT * FROM favorites', (error, results) => {
+    if (error) throw error;
+    res.json(results);
+  });
+});
+
+// Endpoint to add a favorite
+app.post('/favorites', (req, res) => {
+  const { name, type, url } = req.body;
+  const query = 'INSERT INTO favorites (name, type, url) VALUES (?, ?, ?)';
+  connection.query(query, [name, type, url], (error, results) => {
+    if (error) throw error;
+    res.status(201).send(`Favorite added with ID: ${results.insertId}`);
+  });
+});
+
+// Endpoint to delete a favorite
+app.delete('/favorites/:id', (req, res) => {
+  const { id } = req.params;
+  const query = 'DELETE FROM favorites WHERE id = ?';
+  connection.query(query, [id], (error, results) => {
+    if (error) throw error;
+    res.send(`Favorite with ID ${id} deleted.`);
+  });
+});
+
+// Endpoint to update a favorite
+app.put('/favorites/:id', (req, res) => {
+  const { id } = req.params;
+  const { name, type, url } = req.body;
+  const query = 'UPDATE favorites SET name = ?, type = ?, url = ? WHERE id = ?';
+  connection.query(query, [name, type, url, id], (error, results) => {
+    if (error) throw error;
+    res.send(`Favorite with ID ${id} updated.`);
+  });
+});
+
+// Endpoint to fetch episodes from an external API
+app.get('/episodes', async (req, res) => {
   try {
-    await goal.save();
-    res
-      .status(201)
-      .json({ message: 'Goal saved', goal: { id: goal.id, text: goalText } });
-    console.log('STORED NEW GOAL');
-  } catch (err) {
-    console.error('ERROR FETCHING GOALS');
-    console.error(err.message);
-    res.status(500).json({ message: 'Failed to save goal.' });
+    const response = await axios.get('https://rickandmortyapi.com/api/episode');
+    res.status(200).json({ episodes: response.data });
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong.' });
   }
 });
 
-app.delete('/goals/:id', async (req, res) => {
-  console.log('TRYING TO DELETE GOAL');
-  try {
-    await Goal.deleteOne({ _id: req.params.id });
-    res.status(200).json({ message: 'Deleted goal!' });
-    console.log('DELETED GOAL');
-  } catch (err) {
-    console.error('ERROR FETCHING GOALS');
-    console.error(err.message);
-    res.status(500).json({ message: 'Failed to delete goal.' });
-  }
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
-
-mongoose.connect(
-  `mongodb://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@mongodb:27017/course-goals?authSource=admin`,
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  },
-  (err) => {
-    if (err) {
-      console.error('FAILED TO CONNECT TO MONGODB');
-      console.error(err);
-    } else {
-      console.log('CONNECTED TO MONGODB!!');
-      app.listen(80);
-    }
-  }
-);

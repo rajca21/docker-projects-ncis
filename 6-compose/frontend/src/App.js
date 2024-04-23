@@ -1,113 +1,55 @@
+// src/App.js
 import React, { useState, useEffect } from 'react';
-
-import GoalInput from './components/goals/GoalInput';
-import CourseGoals from './components/goals/CourseGoals';
-import ErrorAlert from './components/UI/ErrorAlert';
+import axios from 'axios';
+import FavoritesList from './FavoritesList';
+import AddFavoriteForm from './AddFavoriteForm';
+import './App.css';
 
 function App() {
-  const [loadedGoals, setLoadedGoals] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [favorites, setFavorites] = useState([]);
 
-  useEffect(function () {
-    async function fetchData() {
-      setIsLoading(true);
-
-      try {
-        const response = await fetch('http://localhost/goals');
-
-        const resData = await response.json();
-
-        if (!response.ok) {
-          throw new Error(resData.message || 'Fetching the goals failed.');
-        }
-
-        setLoadedGoals(resData.goals);
-      } catch (err) {
-        setError(
-          err.message ||
-            'Fetching goals failed - the server responsed with an error.'
-        );
-      }
-      setIsLoading(false);
-    }
-
-    fetchData();
+  useEffect(() => {
+    // Fetch favorites from the backend
+    axios.get('http://localhost:3000/favorites')
+      .then(response => {
+        setFavorites(response.data);
+      })
+      .catch(error => console.error('Error fetching favorites:', error));
   }, []);
 
-  async function addGoalHandler(goalText) {
-    setIsLoading(true);
+  const handleAddFavorite = (newFavorite) => {
+  // Assuming your backend returns the newly added favorite, including its id
+  setFavorites([...favorites, newFavorite]);
+};
 
-    try {
-      const response = await fetch('http://localhost/goals', {
-        method: 'POST',
-        body: JSON.stringify({
-          text: goalText,
-        }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+  const handleDelete = (id) => {
+    axios.delete(`http://localhost:3000/favorites/${id}`)
+      .then(() => {
+        // Update the state to remove the item with the given id
+        setFavorites(favorites.filter(favorite => favorite.id !== id));
+      })
+      .catch(error => console.error('Error deleting favorite:', error));
+  };
 
-      const resData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(resData.message || 'Adding the goal failed.');
-      }
-
-      setLoadedGoals((prevGoals) => {
-        const updatedGoals = [
-          {
-            id: resData.goal.id,
-            text: goalText,
-          },
-          ...prevGoals,
-        ];
-        return updatedGoals;
-      });
-    } catch (err) {
-      setError(
-        err.message ||
-          'Adding a goal failed - the server responsed with an error.'
-      );
-    }
-    setIsLoading(false);
-  }
-
-  async function deleteGoalHandler(goalId) {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('http://localhost/goals/' + goalId, {
-        method: 'DELETE',
-      });
-
-      const resData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(resData.message || 'Deleting the goal failed.');
-      }
-
-      setLoadedGoals((prevGoals) => {
-        const updatedGoals = prevGoals.filter((goal) => goal.id !== goalId);
-        return updatedGoals;
-      });
-    } catch (err) {
-      setError(
-        err.message ||
-          'Deleting the goal failed - the server responsed with an error.'
-      );
-    }
-    setIsLoading(false);
-  }
+  const handleSubmit = (event, formData) => {
+    event.preventDefault();
+    axios.post('http://localhost:3000/favorites', formData)
+      .then(response => {
+        handleAddFavorite(formData);
+        
+      })
+      .catch(error => console.error('Error adding favorite:', error));
+  };
 
   return (
-    <div>
-      {error && <ErrorAlert errorText={error} />}
-      <GoalInput onAddGoal={addGoalHandler} />
-      {!isLoading && (
-        <CourseGoals goals={loadedGoals} onDeleteGoal={deleteGoalHandler} />
-      )}
+    <div className="App">
+      <header className="App-header">
+        <h1>My Favorite Movies and Episodes</h1>
+      </header>
+      <div className="App-body">
+        <FavoritesList favorites={favorites} onDelete={handleDelete} />
+        <AddFavoriteForm onSubmit={handleSubmit} />
+      </div>
     </div>
   );
 }
